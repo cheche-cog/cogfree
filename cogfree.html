@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>痴呆风险评估在线计算器 | Dementia Risk Assessment</title>
+    <style>
+        /* 加载动画样式 */
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1e5799;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 主样式 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Times New Roman', 'SimSun', serif;
+        }
+        
+        body {
+            background: #e4eaf5;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4eaf5 100%);
+            color: #333;
+            line-height: 1.5;
+            padding: 15px;
+            font-size: 0.95rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: relative;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        
+        /* 语言切换按钮样式 - 优化为右上角小尺寸 */
+        .language-toggle {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 18px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 100;
+            font-size: 0.7rem;
+        }
+        
+        .language-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        header {
+            background: #1e5799;
+            background: linear-gradient(90deg, #1e5799 0%, #2989d8 50%, #207cca 100%);
+            color: white;
+            text-align: center;
+            padding: 20px 15px;
+            position: relative;
+        }
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+        
+        header p {
+            font-size: 1.05rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .content-wrapper {
+            display: flex;
+            padding: 15px;
+            gap: 20px;
+        }
+        
+        .form-section {
+            flex: 1;
+            background-color: #f9fafd;
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        .results-section {
+            flex: 0 0 330px;
+            background-color: #eef4ff;
+            border-radius: 10px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #1e5799;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e1e6ef;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+        
+        .form-group label .required {
+            display: none; /* 隐藏必填标识 */
+        }
+        
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d9e6;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #1e5799;
+            background: linear-gradient(90deg, #1e5799 0%, #2989d8 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+            touch-action: manipulation;
+        }
+        
+        button:hover {
+            background: #184982;
+            background: linear-gradient(90deg, #184982 0%, #1a75c3 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(30, 87, 153, 0.25);
+        }
+        
+        #riskResult {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #1e5799;
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 0 2px 4px rgba(30, 87, 153, 0.15);
+        }
+        
+        #riskDescription {
+            text-align: center;
+            padding: 12px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+        
+        .results-explanation {
+            background-color: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            margin-top: 15px;
+            font-size: 0.95rem;
+        }
+        
+        .notes {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #f1f8ff;
+            border-left: 4px solid #1e5799;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 16px;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            border-top: 1px solid #ecf0f1;
+        }
+        
+        @media (max-width: 900px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .results-section {
+                flex: 1;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+            }
+            
+            .results-section {
+                padding: 15px;
+            }
+        }
+        
+        .risk-indicator {
+            width: 100%;
+            height: 18px;
+            background: #4CAF50;
+            background: linear-gradient(90deg, #4CAF50 0%, #FFC107 50%, #F44336 100%);
+            border-radius: 9px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .risk-pointer {
+            width: 3px;
+            height: 26px;
+            background-color: #2c3e50;
+            position: absolute;
+            top: -4px;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .risk-level {
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+        }
+        
+        .risk-level.low {
+            background-color: #4CAF50;
+        }
+        
+        .risk-level.medium {
+            background-color: #FFC107;
+            color: #333;
+        }
+        
+        .risk-level.high {
+            background-color: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载动画 -->
+    <div class="loader-container" id="loader">
+        <div class="loader"></div>
+    </div>
+
+    <div class="container" id="mainContent">
+        <button class="language-toggle" id="languageToggle" aria-label="切换语言">English</button>
+        
+        <header>
+            <h1 data-key="title">痴呆风险评估在线计算器</h1>
+            <p data-key="subtitle">基于逻辑回归模型的多因素分析 | 输入您的相关信息获取个性化风险评估</p>
+        </header>
+        
+        <div class="content-wrapper">
+            <section class="form-section">
+                <!-- 1. 人口统计学特征 -->
+                <h2 class="section-title" data-key="demographic_title">人口统计学特征</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="age" data-key="age_label">年龄（岁）</label>
+                        <input type="number" id="age" placeholder="例如：65" data-placeholder-key="age_placeholder" min="18" max="120" step="1" aria-label="年龄" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edu_years" data-key="edu_years_label">受教育年限（年）</label>
+                        <input type="number" id="edu_years" placeholder="例如：12" data-placeholder-key="edu_placeholder" min="0" max="40" step="1" aria-label="受教育年限" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="living_arrangement" data-key="living_arrangement_label">居住状况</label>
+                        <select id="living_arrangement" aria-label="居住状况" required>
+                            <option value="0" data-key="living_alone">独居</option>
+                            <option value="1" data-key="living_friends">与朋友/照护者同住</option>
+                            <option value="2" data-key="living_spouse">仅与配偶同住</option>
+                            <option value="3" data-key="living_generations">多代同住</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="medical_insurance" data-key="medical_insurance_label">医疗保险类型</label>
+                        <select id="medical_insurance" aria-label="医疗保险类型" required>
+                            <option value="0" data-key="insurance_none">无保险</option>
+                            <option value="1" data-key="insurance_resident">城乡居民基本医疗保险</option>
+                            <option value="2" data-key="insurance_employee">职工基本医疗保险</option>
+                            <option value="3" data-key="insurance_commercial">商业医疗保险</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="income_satisfaction" data-key="income_satisfaction_label">对收入是否满意</label>
+                        <select id="income_satisfaction" aria-label="对收入是否满意" required>
+                            <option value="0" data-key="satisfaction_no">否</option>
+                            <option value="1" data-key="satisfaction_yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="alive_siblings" data-key="alive_siblings_label">是否有健在的兄弟姐妹</label>
+                        <select id="alive_siblings" aria-label="是否有健在的兄弟姐妹" required>
+                            <option value="0" data-key="siblings_no">否</option>
+                            <option value="1" data-key="siblings_yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="close_friends" data-key="close_friends_label">亲密朋友数量</label>
+                        <select id="close_friends" aria-label="亲密朋友数量" required>
+                            <option value="0" data-key="friends_none">无</option>
+                            <option value="1" data-key="friends_1_2">1-2人</option>
+                            <option value="2" data-key="friends_3_5">3-5人</option>
+                            <option value="3" data-key="friends_6_plus">6人及以上</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 2. 身体测量指标 -->
+                <h2 class="section-title" data-key="physical_title">身体测量指标</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="height" data-key="height_label">身高（cm）</label>
+                        <input type="number" id="height" placeholder="例如：170" data-placeholder-key="height_placeholder" min="50" max="250" step="1" aria-label="身高" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="weight" data-key="weight_label">体重（kg）</label>
+                        <input type="number" id="weight" placeholder="例如：70" data-placeholder-key="weight_placeholder" min="10" max="300" step="0.1" aria-label="体重" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="waist" data-key="waist_label">腰围（cm）</label>
+                        <input type="number" id="waist" placeholder="例如：85" data-placeholder-key="waist_placeholder" min="30" max="200" step="1" aria-label="腰围" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="right_grip" data-key="right_grip_label">右手握力（kg）</label>
+                        <input type="number" id="right_grip" placeholder="例如：30.5" data-placeholder-key="grip_placeholder" min="5" max="100" step="0.1" aria-label="右手握力" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="heart_rate" data-key="heart_rate_label">心率（次/分钟）</label>
+                        <input type="number" id="heart_rate" placeholder="例如：75" data-placeholder-key="heart_rate_placeholder" min="30" max="200" step="1" aria-label="心率" required>
+                    </div>
+                </div>
+
+                <!-- 3. 病史（包含原家族史内容） -->
+                <h2 class="section-title" data-key="medical_history_title">病史</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hypertension" data-key="hypertension_label">高血压</label>
+                        <select id="hypertension" aria-label="高血压" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="anemia" data-key="anemia_label">贫血</label>
+                        <select id="anemia" aria-label="贫血" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="head_trauma" data-key="head_trauma_label">脑外伤史</label>
+                        <select id="head_trauma" aria-label="脑外伤史" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="facial_infection" data-key="facial_infection_label">面部感染</label>
+                        <select id="facial_infection" aria-label="面部感染" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="thyroid_dysfunction" data-key="thyroid_label">甲状腺功能异常</label>
+                        <select id="thyroid_dysfunction" aria-label="甲状腺功能异常" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cervical_spondylosis" data-key="cervical_label">颈椎病</label>
+                        <select id="cervical_spondylosis" aria-label="颈椎病" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="depression" data-key="depression_label">抑郁症</label>
+                        <select id="depression" aria-label="抑郁症" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="parkinson" data-key="parkinson_label">帕金森病</label>
+                        <select id="parkinson" aria-label="帕金森病" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 原家族史内容整合到病史部分 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="diabetes_family" data-key="diabetes_family_label">糖尿病家族史</label>
+                        <select id="diabetes_family" aria-label="糖尿病家族史" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="stroke_family" data-key="stroke_family_label">中风家族史</label>
+                        <select id="stroke_family" aria-label="中风家族史" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 4. 行为和生活方式 -->
+                <h2 class="section-title" data-key="lifestyle_title">行为和生活方式</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fish_consumption" data-key="fish_label">吃鱼频率</label>
+                        <select id="fish_consumption" aria-label="吃鱼频率" required>
+                            <option value="0" data-key="fish_rarely">从不或每周少于一次</option>
+                            <option value="1" data-key="fish_regularly">每周超过一次</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fruit_consumption" data-key="fruit_label">吃水果频率</label>
+                        <select id="fruit_consumption" aria-label="吃水果频率" required>
+                            <option value="0" data-key="fruit_rarely">从不或每周少于一次</option>
+                            <option value="1" data-key="fruit_regularly">每周超过一次</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eating_behaviors" data-key="eating_behaviors_label">饮食习惯</label>
+                        <select id="eating_behaviors" aria-label="饮食习惯" required>
+                            <option value="0" data-key="diet_normal">无特殊习惯</option>
+                            <option value="1" data-key="diet_skip_breakfast">不吃早餐</option>
+                            <option value="2" data-key="diet_afternoon_tea">喝下午茶</option>
+                            <option value="3" data-key="diet_midnight_snack">吃夜宵</option>
+                            <option value="4" data-key="diet_midnight_eat">半夜吃东西</option>
+                            <option value="5" data-key="diet_skip_lunch">不吃午餐</option>
+                            <option value="6" data-key="diet_skip_dinner">不吃晚餐</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cognitive_activity" data-key="cognitive_activity_label">认知活动参与</label>
+                        <select id="cognitive_activity" aria-label="认知活动参与" required>
+                            <option value="0" data-key="cognitive_inactive">不参与</option>
+                            <option value="1" data-key="cognitive_active">参与</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="night_awakenings" data-key="night_awakenings_label">夜间醒来频率</label>
+                        <select id="night_awakenings" aria-label="夜间醒来频率" required>
+                            <option value="0" data-key="awaken_none">无</option>
+                            <option value="1" data-key="awaken_less1">每周少于1次</option>
+                            <option value="2" data-key="awaken_1_2">每周1-2次</option>
+                            <option value="3" data-key="awaken_3plus">每周3次及以上</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 5. 外周器官功能评估 -->
+                <h2 class="section-title" data-key="peripheral_function_title">外周器官功能评估</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hearing_acuity" data-key="hearing_label">听力状况（与之前相比）</label>
+                        <select id="hearing_acuity" aria-label="听力状况" required>
+                            <option value="0" data-key="hearing_normal">无变化</option>
+                            <option value="1" data-key="hearing_mild">轻度下降</option>
+                            <option value="2" data-key="hearing_significant">明显下降</option>
+                            <option value="3" data-key="hearing_loss">丧失</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sense_of_smell" data-key="smell_label">嗅觉状况（与之前相比）</label>
+                        <select id="sense_of_smell" aria-label="嗅觉状况" required>
+                            <option value="0" data-key="smell_normal">无变化</option>
+                            <option value="1" data-key="smell_mild">轻度下降</option>
+                            <option value="2" data-key="smell_significant">明显下降</option>
+                            <option value="3" data-key="smell_loss">丧失</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="vision_acuity" data-key="vision_label">视力状况（与之前相比）</label>
+                        <select id="vision_acuity" aria-label="视力状况" required>
+                            <option value="0" data-key="vision_normal">无变化</option>
+                            <option value="1" data-key="vision_mild">轻度下降</option>
+                            <option value="2" data-key="vision_significant">明显下降</option>
+                            <option value="3" data-key="vision_loss">丧失</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="step_frequency" data-key="step_freq_label">步频（与之前相比）</label>
+                        <select id="step_frequency" aria-label="步频" required>
+                            <option value="1" data-key="step_slower">变慢</option>
+                            <option value="2" data-key="step_normal">无变化</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gait_instability" data-key="gait_label">步态不稳</label>
+                        <select id="gait_instability" aria-label="步态不稳" required>
+                            <option value="0" data-key="gait_stable">否</option>
+                            <option value="1" data-key="gait_unstable">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="defecation_habit" data-key="defecation_habit_label">排便习惯</label>
+                        <select id="defecation_habit" aria-label="排便习惯" required>
+                            <option value="1" data-key="defecation_morning">早上</option>
+                            <option value="2" data-key="defecation_afternoon">下午</option>
+                            <option value="3" data-key="defecation_evening">晚上</option>
+                            <option value="4" data-key="defecation_irregular">无规律</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="defecation_duration" data-key="defecation_duration_label">每次排便时长（分钟）</label>
+                        <input type="number" id="defecation_duration" placeholder="例如：10" data-placeholder-key="defecation_placeholder" min="1" max="60" step="1" aria-label="每次排便时长" required>
+                    </div>
+                </div>
+
+                <!-- 6. 心理状态 -->
+                <h2 class="section-title" data-key="psychological_title">心理状态</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memory_concern" data-key="memory_concern_label">担心记忆力下降</label>
+                        <select id="memory_concern" aria-label="担心记忆力下降" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="memory_worse" data-key="memory_worse_label">记忆力比同龄人差</label>
+                        <select id="memory_worse" aria-label="记忆力比同龄人差" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memory_doctor" data-key="memory_doctor_label">因记忆力问题看过医生</label>
+                        <select id="memory_doctor" aria-label="因记忆力问题看过医生" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="family_support" data-key="family_support_label">得到家人的情感支持</label>
+                        <select id="family_support" aria-label="得到家人的情感支持" required>
+                            <option value="0" data-key="no">否</option>
+                            <option value="1" data-key="yes">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button onclick="calculateRisk()" data-key="calculate_btn">计算风险概率</button>
+                
+            </section>
+            
+            <section class="results-section">
+                <h2 class="section-title" data-key="results_title">风险评估结果</h2>
+                
+                <div id="riskResult">0.00%</div>
+                <div class="risk-level" id="riskLevel"></div>
+                
+                <div id="riskDescription" data-key="results_default">
+                    请填写左侧表格信息后点击"计算风险概率"按钮获取评估结果
+                </div>
+                
+                <div class="risk-indicator">
+                    <div class="risk-pointer" id="riskPointer" style="left: 15%;"></div>
+                </div>
+                
+                <div style="width: 100%; display: flex; justify-content: space-between;">
+                    <div data-key="low_risk">低风险</div>
+                    <div data-key="high_risk">高风险</div>
+                </div>
+                
+                <div class="results-explanation">
+                    <h3 data-key="explanation_title">结果说明：</h3>
+                    <p data-key="explanation1">计算结果表示您在未来发展为阿尔兹海默症的统计概率。</p>
+    <p><strong data-key="low_risk">低风险：</strong> &lt; 51.37% - <span data-key="low_risk_desc">风险低于阈值水平，建议保持健康生活习惯</span></p>
+    <p><strong data-key="high_risk">高风险：</strong> ≥ 51.37% - <span data-key="high_risk_desc">风险高于阈值水平，建议咨询专业医生进行进一步评估</span></p>
+</div>
+                
+                <div class="results-explanation">
+                    <h3 data-key="protective_title">重要保护因素：</h3>
+                    <ul>
+                        <li data-key="protective1">较高的教育年限</li>
+                        <li data-key="protective2">更强的握力水平</li>
+                        <li data-key="protective3">积极参与体智活动</li>
+                        <li data-key="protective4">维持听力健康</li>
+                        <li data-key="protective5">维持规律排便</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <p data-key="footer1">© 2025 痴呆风险评估在线计算器系统 | 本模型基于大规模流行病学研究构建</p>
+            <p data-key="footer2">计算结果仅供参考，不作为医疗诊断依据。如有健康问题，请咨询专业医生。</p>
+        </footer>
+    </div>
+
+    <script>
+        // 页面加载完成后隐藏加载动画
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(function() {
+                    loader.style.display = 'none';
+                    document.getElementById('mainContent').style.opacity = '1';
+                }, 500);
+            }, 800); // 显示加载动画至少800ms
+        });
+
+        // 语言切换功能 - 完善英文翻译
+        const translations = {
+            'zh-CN': {
+                'title': '痴呆风险评估在线计算器',
+                'subtitle': '基于逻辑回归模型的多因素分析 | 输入您的相关信息获取个性化风险评估',
+                'demographic_title': '人口统计学特征',
+                'age_label': '年龄（岁）',
+                'age_placeholder': '例如：65',
+                'edu_years_label': '受教育年限（年）',
+                'edu_placeholder': '例如：12',
+                'living_arrangement_label': '居住状况',
+                'living_alone': '独居',
+                'living_friends': '与朋友/照护者同住',
+                'living_spouse': '仅与配偶同住',
+                'living_generations': '多代同住',
+                'medical_insurance_label': '医疗保险类型',
+                'insurance_none': '无保险',
+                'insurance_resident': '城乡居民基本医疗保险',
+                'insurance_employee': '职工基本医疗保险',
+                'insurance_commercial': '商业医疗保险',
+                'income_satisfaction_label': '对收入是否满意',
+                'satisfaction_no': '否',
+                'satisfaction_yes': '是',
+                'alive_siblings_label': '是否有健在的兄弟姐妹',
+                'siblings_no': '否',
+                'siblings_yes': '是',
+                'close_friends_label': '亲密朋友数量',
+                'friends_none': '无',
+                'friends_1_2': '1-2人',
+                'friends_3_5': '3-5人',
+                'friends_6_plus': '6人及以上',
+                'physical_title': '身体测量指标',
+                'height_label': '身高（cm）',
+                'height_placeholder': '例如：170',
+                'weight_label': '体重（kg）',
+                'weight_placeholder': '例如：70',
+                'waist_label': '腰围（cm）',
+                'waist_placeholder': '例如：85',
+                'right_grip_label': '右手握力（kg）',
+                'grip_placeholder': '例如：30.5',
+                'heart_rate_label': '心率（次/分钟）',
+                'heart_rate_placeholder': '例如：75',
+                'medical_history_title': '病史',
+                'hypertension_label': '高血压',
+                'anemia_label': '贫血',
+                'head_trauma_label': '脑外伤史',
+                'facial_infection_label': '面部感染',
+                'thyroid_label': '甲状腺功能异常',
+                'cervical_label': '颈椎病',
+                'depression_label': '抑郁症',
+                'parkinson_label': '帕金森病',
+                'diabetes_family_label': '糖尿病家族史',
+                'stroke_family_label': '中风家族史',
+                'lifestyle_title': '行为和生活方式',
+                'fish_label': '吃鱼频率',
+                'fish_rarely': '从不或每周少于一次',
+                'fish_regularly': '每周超过一次',
+                'fruit_label': '吃水果频率',
+                'fruit_rarely': '从不或每周少于一次',
+                'fruit_regularly': '每周超过一次',
+                'eating_behaviors_label': '饮食习惯',
+                'diet_normal': '无特殊习惯',
+                'diet_skip_breakfast': '不吃早餐',
+                'diet_afternoon_tea': '喝下午茶',
+                'diet_midnight_snack': '吃夜宵',
+                'diet_midnight_eat': '半夜吃东西',
+                'diet_skip_lunch': '不吃午餐',
+                'diet_skip_dinner': '不吃晚餐',
+                'cognitive_activity_label': '认知活动参与',
+                'cognitive_inactive': '不参与',
+                'cognitive_active': '参与',
+                'night_awakenings_label': '夜间醒来频率',
+                'awaken_none': '无',
+                'awaken_less1': '每周少于1次',
+                'awaken_1_2': '每周1-2次',
+                'awaken_3plus': '每周3次及以上',
+                'peripheral_function_title': '外周器官功能评估',
+                'hearing_label': '听力状况（与之前相比）',
+                'hearing_normal': '无变化',
+                'hearing_mild': '轻度下降',
+                'hearing_significant': '明显下降',
+                'hearing_loss': '丧失',
+                'smell_label': '嗅觉状况（与之前相比）',
+                'smell_normal': '无变化',
+                'smell_mild': '轻度下降',
+                'smell_significant': '明显下降',
+                'smell_loss': '丧失',
+                'vision_label': '视力状况（与之前相比）',
+                'vision_normal': '无变化',
+                'vision_mild': '轻度下降',
+                'vision_significant': '明显下降',
+                'vision_loss': '丧失',
+                'step_freq_label': '步频（与之前相比）',
+                'step_slower': '变慢',
+                'step_normal': '无变化',
+                'gait_label': '步态不稳',
+                'gait_stable': '否',
+                'gait_unstable': '是',
+                'defecation_habit_label': '排便习惯',
+                'defecation_morning': '早上',
+                'defecation_afternoon': '下午',
+                'defecation_evening': '晚上',
+                'defecation_irregular': '无规律',
+                'defecation_duration_label': '每次排便时长（分钟）',
+                'defecation_placeholder': '例如：10',
+                'psychological_title': '心理状态',
+                'memory_concern_label': '担心记忆力下降',
+                'memory_worse_label': '记忆力比同龄人差',
+                'memory_doctor_label': '因记忆力问题看过医生',
+                'family_support_label': '得到家人的情感支持',
+                'calculate_btn': '计算风险概率',
+                'results_title': '风险评估结果',
+                'results_default': '请填写左侧表格信息后点击"计算风险概率"按钮获取评估结果',
+                'low_risk': '低风险',
+                'medium_risk': '中等风险',
+                'high_risk': '高风险',
+                'explanation_title': '结果说明：',
+                'explanation1': '计算结果表示您在未来发展为阿尔兹海默症的统计概率。',
+                'low_risk_desc': '风险低于一般人群水平',
+                'medium_risk_desc': '需关注健康生活习惯',
+                'high_risk_desc': '建议咨询专业医生进行进一步评估',
+                'protective_title': '重要保护因素：',
+                'protective1': '较高的教育年限',
+                'protective2': '更强的握力水平',
+                'protective3': '积极参与体智活动',
+                'protective4': '维持听力健康',
+                'protective5': '维持规律排便',
+                'footer1': '© 2025 痴呆风险评估在线计算器系统 | 本模型基于大规模流行病学研究构建',
+                'footer2': '计算结果仅供参考，不作为医疗诊断依据。如有健康问题，请咨询专业医生。',
+                'no': '否',
+                'yes': '是'
+            },
+            'en': {
+                'title': 'Cog-Free Dementia Risk Tool',
+                'subtitle': 'Multifactorial analysis based on Logistic Regression Model | Enter your information for personalized risk assessment',
+                'demographic_title': 'Sociodemographics',
+                'age_label': 'Age (years)',
+                'age_placeholder': 'e.g.: 65',
+                'edu_years_label': 'Education (years)',
+                'edu_placeholder': 'e.g.: 12',
+                'living_arrangement_label': 'Living arrangement',
+                'living_alone': 'Living alone',
+                'living_friends': 'Living with friends/caregivers',
+                'living_spouse': 'Living with spouse only',
+                'living_generations': 'Generations living together',
+                'medical_insurance_label': 'Medical insurance',
+                'insurance_none': 'No insurance',
+                'insurance_resident': 'Urban and rural residents\' insurance',
+                'insurance_employee': 'Employees\' basic insurance',
+                'insurance_commercial': 'Commercial medical insurance',
+                'income_satisfaction_label': 'Satisfied with income',
+                'satisfaction_no': 'No',
+                'satisfaction_yes': 'Yes',
+                'alive_siblings_label': 'Alive siblings',
+                'siblings_no': 'No',
+                'siblings_yes': 'Yes',
+                'close_friends_label': 'Number of close friends',
+                'friends_none': 'None',
+                'friends_1_2': '1-2 people',
+                'friends_3_5': '3-5 people',
+                'friends_6_plus': '6 or more people',
+                'physical_title': 'Physical measurements',
+                'height_label': 'Height (cm)',
+                'height_placeholder': 'e.g.: 170',
+                'weight_label': 'Weight (kg)',
+                'weight_placeholder': 'e.g.: 70',
+                'waist_label': 'Waistline (cm)',
+                'waist_placeholder': 'e.g.: 85',
+                'right_grip_label': 'Right-hand grip (kg)',
+                'grip_placeholder': 'e.g.: 30.5',
+                'heart_rate_label': 'Heart rate (bpm)',
+                'heart_rate_placeholder': 'e.g.: 75',
+                'medical_history_title': 'Medical history',
+                'hypertension_label': 'Hypertension',
+                'anemia_label': 'Anemia',
+                'head_trauma_label': 'History of head trauma',
+                'facial_infection_label': 'Facial infection',
+                'thyroid_label': 'Thyroid dysfunction',
+                'cervical_label': 'Cervical spondylosis',
+                'depression_label': 'Depression',
+                'parkinson_label': 'Parkinson\'s disease',
+                'diabetes_family_label': 'Family history of diabetes',
+                'stroke_family_label': 'Family history of stroke',
+                'lifestyle_title': 'Behavior and Lifestyle',
+                'fish_label': 'Fish consumption',
+                'fish_rarely': 'Never or less than once a week',
+                'fish_regularly': 'More than once a week',
+                'fruit_label': 'Fruit consumption',
+                'fruit_rarely': 'Never or less than once a week',
+                'fruit_regularly': 'More than once a week',
+                'eating_behaviors_label': 'Eating behaviors',
+                'diet_normal': 'No special habits',
+                'diet_skip_breakfast': 'Skip breakfast',
+                'diet_afternoon_tea': 'Have afternoon tea',
+                'diet_midnight_snack': 'Have midnight snacks',
+                'diet_midnight_eat': 'Eat in the middle of the night',
+                'diet_skip_lunch': 'Skip lunch',
+                'diet_skip_dinner': 'Skip dinner',
+                'cognitive_activity_label': 'Cognitively inactive',
+                'cognitive_inactive': 'Inactive',
+                'cognitive_active': 'Active',
+                'night_awakenings_label': 'Frequency of nighttime awakenings',
+                'awaken_none': 'None',
+                'awaken_less1': 'Less than once a week',
+                'awaken_1_2': '1-2 times a week',
+                'awaken_3plus': '3 or more times a week',
+                'peripheral_function_title': 'Peripheral organ function assessment',
+                'hearing_label': 'Hearing acuity',
+                'hearing_normal': 'No change',
+                'hearing_mild': 'Mild dullness',
+                'hearing_significant': 'Significant dullness',
+                'hearing_loss': 'Loss',
+                'smell_label': 'Sense of smell',
+                'smell_normal': 'No change',
+                'smell_mild': 'Mild dullness',
+                'smell_significant': 'Significant dullness',
+                'smell_loss': 'Loss',
+                'vision_label': 'Vision acuity',
+                'vision_normal': 'No change',
+                'vision_mild': 'Mild dullness',
+                'vision_significant': 'Significant dullness',
+                'vision_loss': 'Loss',
+                'step_freq_label': 'Slower pace',
+                'step_slower': 'Slower',
+                'step_normal': 'No change',
+                'gait_label': 'Gait instability',
+                'gait_stable': 'No',
+                'gait_unstable': 'Yes',
+                'defecation_habit_label': 'Defecation habit',
+                'defecation_morning': 'Morning',
+                'defecation_afternoon': 'Afternoon',
+                'defecation_evening': 'Evening',
+                'defecation_irregular': 'Irregular',
+                'defecation_duration_label': 'Defecation duration',
+                'defecation_placeholder': 'e.g.: 10',
+                'psychological_title': 'Psychological status',
+                'memory_concern_label': 'Memory concern',
+                'memory_worse_label': 'Having worse memory than peers',
+                'memory_doctor_label': 'Seeing a doctor due to memory concerns',
+                'family_support_label': 'Family emotional support',
+                'calculate_btn': 'Calculate Risk Probability',
+                'results_title': 'Risk Assessment Results',
+                'results_default': 'Please fill in the form on the left and click "Calculate Risk Probability"',
+                'low_risk': 'Low Risk',
+                'high_risk': 'High Risk',
+                'explanation_title': 'Result Explanation:',
+                'explanation1': 'The result represents your statistical probability of developing Alzheimer\'s disease in the future.',
+                'low_risk_desc': 'Risk is lower than the general population',
+                'medium_risk_desc': 'Need to pay attention to healthy lifestyle habits',
+                'high_risk_desc': 'Recommend consulting a professional doctor for further evaluation',
+                'protective_title': 'Important Protective Factors:',
+                'protective1': 'Higher education attendance',
+                'protective2': 'Stronger grip strength',
+                'protective3': 'Active participation in physical and intellectual activities',
+                'protective4': 'Maintaining hearing health',
+                'protective5': 'Maintaining regular bowel movements',
+                'footer1': '© 2025 Cog-Free Dementia Risk Tool | Based on large-scale epidemiological studies',
+                'footer2': 'Results are for reference only and not for medical diagnosis. Consult a professional doctor for health issues.',
+                'no': 'No',
+                'yes': 'Yes'
+            }
+        };
+
+        // 语言切换功能实现
+        let currentLang = 'zh-CN';
+        const languageToggle = document.getElementById('languageToggle');
+
+        languageToggle.addEventListener('click', function() {
+            currentLang = currentLang === 'zh-CN' ? 'en' : 'zh-CN';
+            updateLanguage();
+        });
+
+        function updateLanguage() {
+            // 更新按钮文本
+            languageToggle.textContent = currentLang === 'zh-CN' ? 'English' : '中文';
+            
+            // 更新所有带data-key的元素
+            document.querySelectorAll('[data-key]').forEach(element => {
+                const key = element.getAttribute('data-key');
+                if (translations[currentLang][key]) {
+                    element.textContent = translations[currentLang][key];
+                }
+            });
+            
+            // 更新占位符
+            document.querySelectorAll('[data-placeholder-key]').forEach(element => {
+                const key = element.getAttribute('data-placeholder-key');
+                if (translations[currentLang][key]) {
+                    element.placeholder = translations[currentLang][key];
+                }
+            });
+            
+            // 更新页面语言属性
+            document.documentElement.lang = currentLang;
+        }
+
+        // 计算风险的函数 - 基于提供的逻辑回归系数实现
+        function calculateRisk() {
+            // 收集表单数据
+            const age = parseFloat(document.getElementById('age').value) || 0;
+            const eduYears = parseFloat(document.getElementById('edu_years').value) || 0;
+            const livingArrangement = parseInt(document.getElementById('living_arrangement').value) || 0;
+            const medicalInsurance = parseInt(document.getElementById('medical_insurance').value) || 0;
+            const incomeSatisfaction = parseInt(document.getElementById('income_satisfaction').value) || 0;
+            const hasSiblings = parseInt(document.getElementById('alive_siblings').value) || 0;
+            const friendsCount = parseInt(document.getElementById('close_friends').value) || 0;
+            
+            // 身体测量指标
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
+            const waist = parseFloat(document.getElementById('waist').value) || 0;
+            const gripStrength = parseFloat(document.getElementById('right_grip').value) || 0;
+            const heartRate = parseFloat(document.getElementById('heart_rate').value) || 0;
+            
+            // 病史
+            const hypertension = parseInt(document.getElementById('hypertension').value) || 0;
+            const anemia = parseInt(document.getElementById('anemia').value) || 0;
+            const headTrauma = parseInt(document.getElementById('head_trauma').value) || 0;
+            const facialInfection = parseInt(document.getElementById('facial_infection').value) || 0;
+            const thyroid = parseInt(document.getElementById('thyroid_dysfunction').value) || 0;
+            const cervical = parseInt(document.getElementById('cervical_spondylosis').value) || 0;
+            const depression = parseInt(document.getElementById('depression').value) || 0;
+            const parkinson = parseInt(document.getElementById('parkinson').value) || 0;
+            const diabetesFamily = parseInt(document.getElementById('diabetes_family').value) || 0;
+            const strokeFamily = parseInt(document.getElementById('stroke_family').value) || 0;
+            
+            // 行为和生活方式
+            const fishConsumption = parseInt(document.getElementById('fish_consumption').value) || 0;
+            const fruitConsumption = parseInt(document.getElementById('fruit_consumption').value) || 0;
+            const eatingBehaviors = parseInt(document.getElementById('eating_behaviors').value) || 0;
+            const cognitiveActivity = parseInt(document.getElementById('cognitive_activity').value) || 0;
+            const nightAwakenings = parseInt(document.getElementById('night_awakenings').value) || 0;
+            
+            // 外周器官功能评估
+            const hearingAcuity = parseInt(document.getElementById('hearing_acuity').value) || 0;
+            const senseOfSmell = parseInt(document.getElementById('sense_of_smell').value) || 0;
+            const visionAcuity = parseInt(document.getElementById('vision_acuity').value) || 0;
+            const stepFrequency = parseInt(document.getElementById('step_frequency').value) || 0;
+            const gaitInstability = parseInt(document.getElementById('gait_instability').value) || 0;
+            const defecationHabit = parseInt(document.getElementById('defecation_habit').value) || 0;
+            const defecationDuration = parseInt(document.getElementById('defecation_duration').value) || 0;
+            
+            // 心理状态
+            const memoryConcern = parseInt(document.getElementById('memory_concern').value) || 0;
+            const memoryWorse = parseInt(document.getElementById('memory_worse').value) || 0;
+            const memoryDoctor = parseInt(document.getElementById('memory_doctor').value) || 0;
+            const familySupport = parseInt(document.getElementById('family_support').value) || 0;
+            
+            // 基于提供的逻辑回归系数计算线性预测值
+            // 公式: logit(p) = Intercept + Σ(Estimate × Variable)
+            let linearPredictor = 1.966; // 截距项 (Intercept)
+            
+            // 添加各因素的贡献
+            linearPredictor += (-0.081) * livingArrangement; // Living Situation
+            linearPredictor += 0.388 * incomeSatisfaction;   // Satisfaction
+            linearPredictor += (-0.236) * hasSiblings;       // Brothers and Sisters
+            linearPredictor += (-0.092) * friendsCount;      // Close Friends
+            
+            // 步频比较 (需转换为与之前相比的变化，1=变慢，0=无变化)
+            const stepFrequencyComparison = stepFrequency === 1 ? 1 : 0;
+            linearPredictor += (-0.266) * stepFrequencyComparison; // Comparison of Step Frequency with Before
+            
+            // 听力比较 (值越大表示听力越差)
+            linearPredictor += (-0.661) * hearingAcuity;     // Comparison of Hearing with Before
+            linearPredictor += (-0.141) * senseOfSmell;      // Comparison of Olfaction with Before
+            
+            linearPredictor += 0.390 * hypertension;         // Hypertension
+            linearPredictor += (-0.374) * anemia;            // Anemia
+            linearPredictor += (-0.541) * headTrauma;        // Brain Trauma
+            linearPredictor += 0.304 * facialInfection;      // Facial Infection
+            linearPredictor += (-0.072) * thyroid;           // Abnormal Thyroid Function
+            linearPredictor += (-0.184) * cervical;          // Cervical Spondylosis
+            linearPredictor += 1.534 * depression;           // Depression
+            linearPredictor += 0.351 * parkinson;            // Parkinsons Disease
+            linearPredictor += 0.297 * diabetesFamily;       // Family History of Diabetes
+            linearPredictor += (-0.454) * strokeFamily;      // Family History of Stroke
+            
+            // 饮食习惯 (1=有特殊习惯，0=无)
+            const hasSpecialDiet = eatingBehaviors > 0 ? 1 : 0;
+            linearPredictor += (-0.193) * fishConsumption;   // Eating Fish
+            linearPredictor += (-0.288) * fruitConsumption;  // Eating Fruits
+            linearPredictor += (-0.330) * hasSpecialDiet;    // Other Eating Habits
+            
+            linearPredictor += (-0.754) * cognitiveActivity; // Intellectual Activity
+            linearPredictor += 0.174 * memoryConcern;        // Worried or NotMemory Decline
+            linearPredictor += 0.731 * memoryWorse;          // Worse than PeersMemory Decline
+            linearPredictor += (-0.353) * memoryDoctor;      // Seen a Doctor or NotMemory Decline
+            linearPredictor += (-0.201) * medicalInsurance;  // 医保
+            linearPredictor += (-0.241) * gaitInstability;   // 观察步态
+            linearPredictor += 0.172 * visionAcuity;         // 视觉跟以前比
+            linearPredictor += (-0.164) * familySupport;     // 得到的安慰和关心
+            
+            // 排便习惯 (1=不规律，0=规律)
+            const irregularDefecation = defecationHabit === 4 ? 1 : 0;
+            linearPredictor += (-0.148) * irregularDefecation; // 何时排便
+            
+            linearPredictor += (-0.281) * nightAwakenings;   // 睡眠中断得分
+            linearPredictor += 0.088 * age;                  // Age
+            linearPredictor += (-0.204) * eduYears;          // Selfreported Years of Education
+            linearPredictor += (-0.040) * height;            // Height
+            linearPredictor += (-0.015) * weight;            // Weight
+            linearPredictor += 0.022 * waist;                // Waist Circumference
+            linearPredictor += (-0.068) * gripStrength;      // 握力右
+            linearPredictor += (-0.012) * heartRate;         // 心率
+            linearPredictor += 0.027 * defecationDuration;   // 每次排便需要多久
+            
+            // 通过Logistic函数将线性预测值转换为概率
+            // p = 1 / (1 + e^(-linearPredictor))
+            const probability = 1 / (1 + Math.exp(-linearPredictor));
+            const riskValue = Math.min(100, Math.max(0, probability * 100)); // 转换为百分比并限制范围
+            const riskPercentage = riskValue.toFixed(2) + '%';
+            
+            // 更新UI显示
+            document.getElementById('riskResult').textContent = riskPercentage;
+            
+            // 更新风险等级（修改后代码）
+const riskLevelElement = document.getElementById('riskLevel');
+let riskLevel, riskDescription;
+
+if (riskValue < 51.37) { // 阈值调整为51.37
+    riskLevel = 'low';
+    riskDescription = translations[currentLang]['low_risk_desc'];
+} else {
+    riskLevel = 'high';
+    riskDescription = translations[currentLang]['high_risk_desc'];
+}
+
+// 更新风险等级标签
+riskLevelElement.className = 'risk-level ' + riskLevel;
+riskLevelElement.textContent = translations[currentLang][riskLevel + '_risk'];
+
+// 更新风险描述
+document.getElementById('riskDescription').textContent = 
+    `${riskPercentage} - ${riskDescription}`;
+
+// 更新风险指示器（仅显示低、高风险标签）
+const pointerPosition = Math.min(100, Math.max(0, riskValue)); 
+document.getElementById('riskPointer').style.left = pointerPosition + '%';
+        }
+    </script>
+</body>
+</html>
